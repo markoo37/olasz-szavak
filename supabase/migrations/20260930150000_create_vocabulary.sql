@@ -1,4 +1,4 @@
--- Shared vocabulary schema for the anonymous Italiano app.
+-- Shared vocabulary schema for the anonymous Bojso Tanul app.
 -- There are no user accounts. The anon key can read and change this global dataset.
 
 create table public.categories (

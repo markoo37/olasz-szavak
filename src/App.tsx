@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom"
 import { AppShell } from "@/components/app-shell/app-shell"
 import { QuizProvider } from "@/context/quiz-session"
+import { APP_NAME } from "@/lib/app"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { CategoriesPage } from "@/pages/CategoriesPage"
 import { DashboardPage } from "@/pages/DashboardPage"
@@ -15,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 function MissingConfig() {
   return (
     <main className="mx-auto flex min-h-svh max-w-lg flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Italiano</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{APP_NAME}</h1>
       <Alert>
         <AlertTitle>Supabase is not configured</AlertTitle>
         <AlertDescription>
