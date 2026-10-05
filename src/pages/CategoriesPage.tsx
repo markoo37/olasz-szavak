@@ -120,8 +120,8 @@ export function CategoriesPage() {
                   <CardDescription>{pluralize(category.wordCount, "word")}</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="outline" aria-label={`New word in ${category.name}`} onClick={() => setWordCategory(category)}>
-                    New word
+                  <Button type="button" size="sm" variant="outline" aria-label={`Add words to ${category.name}`} onClick={() => setWordCategory(category)}>
+                    Add words
                   </Button>
                   <Button size="sm" variant="outline" render={<Link to={`/categories/${category.id}`} />} nativeButton={false} aria-label={`View words in ${category.name}`}>
                     View words
@@ -170,6 +170,7 @@ export function CategoriesPage() {
           word={null}
           categories={[wordCategory]}
           defaultCategoryId={wordCategory.id}
+          allowBulk
           onOpenChange={(open) => { if (!open) setWordCategory(null) }}
           onSaved={() => setReloadKey((value) => value + 1)}
         />

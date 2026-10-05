@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
+import { BulkWordForm } from "@/components/words/bulk-word-form"
 
 const TEXT_LIMIT = 200
 
@@ -33,6 +34,7 @@ export function WordFormDialog({
   word,
   categories,
   defaultCategoryId,
+  allowBulk = false,
   onOpenChange,
   onSaved,
 }: {
@@ -40,6 +42,7 @@ export function WordFormDialog({
   word: WordWithCategory | null
   categories: Category[]
   defaultCategoryId?: string
+  allowBulk?: boolean
   onOpenChange: (open: boolean) => void
   onSaved: () => void
 }) {
@@ -48,6 +51,7 @@ export function WordFormDialog({
   const [categoryId, setCategoryId] = useState(word?.category_id ?? defaultCategoryId ?? categories[0]?.id ?? "")
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({})
   const [pending, setPending] = useState(false)
+  const [bulk, setBulk] = useState(false)
   const editing = Boolean(word)
   const categoryItems = categories.map((category) => ({
     label: category.name,
@@ -100,12 +104,20 @@ export function WordFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={bulk ? "max-h-[90dvh] overflow-y-auto sm:max-w-xl" : "max-h-[90dvh] overflow-y-auto sm:max-w-md"}>
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit word" : "New word"}</DialogTitle>
-          <DialogDescription>Store the Hungarian word with its full Italian entry.</DialogDescription>
+          <DialogTitle>{editing ? "Edit word" : allowBulk ? "Add words" : "New word"}</DialogTitle>
+          <DialogDescription>{bulk ? `Add word pairs to ${categories.find((category) => category.id === defaultCategoryId)?.name ?? "this category"}.` : "Store the Hungarian word with its full Italian entry."}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        {allowBulk && !editing ? (
+          <div className="flex gap-2" role="group" aria-label="Add words mode">
+            <Button type="button" variant={bulk ? "outline" : "default"} aria-pressed={!bulk} disabled={pending} onClick={() => setBulk(false)}>Single word</Button>
+            <Button type="button" variant={bulk ? "default" : "outline"} aria-pressed={bulk} disabled={pending} onClick={() => setBulk(true)}>Bulk paste</Button>
+          </div>
+        ) : null}
+        {bulk && allowBulk && !editing ? (
+          <BulkWordForm categoryId={defaultCategoryId ?? ""} pending={pending} setPending={setPending} onSaved={onSaved} onClose={() => onOpenChange(false)} />
+        ) : <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field data-invalid={errors.hungarian ? true : undefined}>
               <FieldLabel htmlFor="word-hungarian">Hungarian word</FieldLabel>
@@ -167,7 +179,7 @@ export function WordFormDialog({
               {editing ? "Save" : "Add word"}
             </Button>
           </DialogFooter>
-        </form>
+        </form>}
       </DialogContent>
     </Dialog>
   )

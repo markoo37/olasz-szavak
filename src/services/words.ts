@@ -71,6 +71,16 @@ export async function createWord(input: WordInput): Promise<void> {
   if (error) throw error
 }
 
+export async function createWords(inputs: WordInput[]): Promise<void> {
+  if (inputs.length === 0) return
+  const { error } = await supabase.from("words").insert(inputs.map((input) => ({
+    hungarian: input.hungarian,
+    italian: input.italian,
+    category_id: input.categoryId,
+  })))
+  if (error) throw error
+}
+
 export async function updateWord(id: string, input: WordInput): Promise<void> {
   const { error } = await supabase
     .from("words")

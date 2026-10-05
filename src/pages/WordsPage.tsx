@@ -142,7 +142,7 @@ export function WordsPage() {
       {categoryId ? <Link to="/categories" className="w-fit rounded-sm text-sm hover:underline focus-visible:outline-2 focus-visible:outline-ring">Back to categories</Link> : null}
       <PageHeader title={categoryId ? selectedCategory?.name ?? "Category" : "Words"} description={categoryId ? "All words in this category. Add, edit, and search its vocabulary." : "Add, edit, and search the shared vocabulary."}>
         <Button type="button" onClick={openCreate} disabled={formCategories.length === 0}>
-          {categoryId ? "New word" : "Add word"}
+          {categoryId ? "Add words" : "Add word"}
         </Button>
       </PageHeader>
       <QueryState loading={loading} error={error} onRetry={() => setReloadKey((value) => value + 1)}>
@@ -168,7 +168,7 @@ export function WordsPage() {
             </EmptyHeader>
             <EmptyContent>
               <Button type="button" onClick={openCreate}>
-                {categoryId ? "New word" : "Add word"}
+                {categoryId ? "Add words" : "Add word"}
               </Button>
             </EmptyContent>
           </Empty>
@@ -251,6 +251,7 @@ export function WordsPage() {
           word={editing}
           categories={formCategories}
           defaultCategoryId={categoryId}
+          allowBulk={Boolean(categoryId) && !editing}
           onOpenChange={setFormOpen}
           onSaved={() => setReloadKey((value) => value + 1)}
         />
