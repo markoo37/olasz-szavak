@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { PageHeader } from "@/components/page-header"
@@ -33,10 +33,11 @@ import {
 } from "@/components/ui/table"
 import { getErrorMessage } from "@/lib/errors"
 import { listCategories } from "@/services/categories"
-import { deleteWord, listWords } from "@/services/words"
+import { deleteWord, listWords, listWordsByCategoryIds } from "@/services/words"
 import type { CategoryWithCount, WordWithCategory } from "@/types/database"
 
 export function WordsPage() {
+  const { categoryId } = useParams<{ categoryId: string }>()
   const [words, setWords] = useState<WordWithCategory[]>([])
   const [categories, setCategories] = useState<CategoryWithCount[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,15 +54,32 @@ export function WordsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [nextWords, nextCategories] = await Promise.all([listWords(), listCategories()])
-      setWords(nextWords)
+      const [nextWords, nextCategories] = await Promise.all([
+        categoryId ? listWordsByCategoryIds([categoryId]) : listWords(),
+        listCategories(),
+      ])
+      setWords(nextWords.map((word) => ({
+        ...word,
+        categoryName: nextCategories.find((category) => category.id === word.category_id)?.name ?? "Unknown category",
+      })))
       setCategories(nextCategories)
     } catch (loadError) {
       setError(getErrorMessage(loadError))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [categoryId])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setSearch("")
+      setCategoryFilter("all")
+      setFormOpen(false)
+      setEditing(null)
+      setDeleting(null)
+    }, 0)
+    return () => window.clearTimeout(timeout)
+  }, [categoryId])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -77,11 +95,13 @@ export function WordsPage() {
     ],
     [categories],
   )
+  const selectedCategory = categories.find((category) => category.id === categoryId)
+  const formCategories = categoryId ? categories.filter((category) => category.id === categoryId) : categories
 
   const filteredWords = useMemo(() => {
     const query = search.trim().toLowerCase()
     return words.filter((word) => {
-      const matchesCategory = categoryFilter === "all" || word.category_id === categoryFilter
+      const matchesCategory = categoryId ? word.category_id === categoryId : categoryFilter === "all" || word.category_id === categoryFilter
       if (!matchesCategory) return false
       if (!query) return true
       return (
@@ -90,7 +110,7 @@ export function WordsPage() {
         word.categoryName.toLowerCase().includes(query)
       )
     })
-  }, [words, search, categoryFilter])
+  }, [words, search, categoryFilter, categoryId])
 
   function openCreate() {
     setEditing(null)
@@ -119,13 +139,16 @@ export function WordsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Words" description="Add, edit, and search the shared vocabulary.">
-        <Button type="button" onClick={openCreate} disabled={categories.length === 0}>
-          Add word
+      {categoryId ? <Link to="/categories" className="w-fit rounded-sm text-sm hover:underline focus-visible:outline-2 focus-visible:outline-ring">Back to categories</Link> : null}
+      <PageHeader title={categoryId ? selectedCategory?.name ?? "Category" : "Words"} description={categoryId ? "All words in this category. Add, edit, and search its vocabulary." : "Add, edit, and search the shared vocabulary."}>
+        <Button type="button" onClick={openCreate} disabled={formCategories.length === 0}>
+          {categoryId ? "New word" : "Add word"}
         </Button>
       </PageHeader>
       <QueryState loading={loading} error={error} onRetry={() => setReloadKey((value) => value + 1)}>
-        {categories.length === 0 ? (
+        {categoryId && !selectedCategory ? (
+          <p className="text-sm text-muted-foreground">Category not found. It may have been deleted.</p>
+        ) : categories.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyTitle>No categories yet</EmptyTitle>
@@ -141,11 +164,11 @@ export function WordsPage() {
           <Empty>
             <EmptyHeader>
               <EmptyTitle>No words yet</EmptyTitle>
-              <EmptyDescription>Add your first Italian vocabulary word.</EmptyDescription>
+              <EmptyDescription>{categoryId ? "Add the first word to this category." : "Add your first Italian vocabulary word."}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <Button type="button" onClick={openCreate}>
-                Add word
+                {categoryId ? "New word" : "Add word"}
               </Button>
             </EmptyContent>
           </Empty>
@@ -161,7 +184,7 @@ export function WordsPage() {
                   placeholder="Hungarian, Italian, or category"
                 />
               </Field>
-              <Field className="sm:w-56">
+              {!categoryId ? <Field className="sm:w-56">
                 <FieldLabel htmlFor="word-filter">Category</FieldLabel>
                 <Select
                   items={filterItems}
@@ -183,7 +206,7 @@ export function WordsPage() {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-              </Field>
+              </Field> : null}
             </div>
             {filteredWords.length === 0 ? (
               <p className="text-sm text-muted-foreground">No words match your search.</p>
@@ -226,7 +249,8 @@ export function WordsPage() {
           key={editing?.id ?? "create"}
           open={formOpen}
           word={editing}
-          categories={categories}
+          categories={formCategories}
+          defaultCategoryId={categoryId}
           onOpenChange={setFormOpen}
           onSaved={() => setReloadKey((value) => value + 1)}
         />

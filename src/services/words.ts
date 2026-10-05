@@ -48,6 +48,8 @@ export async function listWordsByCategoryIds(categoryIds: string[]): Promise<Wor
       .from("words")
       .select("id, hungarian, italian, category_id, created_at")
       .in("category_id", categoryIds)
+      .order("hungarian", { ascending: true })
+      .order("id", { ascending: true })
       .range(from, to),
   )
 

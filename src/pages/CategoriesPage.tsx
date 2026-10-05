@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { CategoryFormDialog } from "@/components/categories/category-form-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { PageHeader } from "@/components/page-header"
 import { QueryState } from "@/components/query-state"
+import { WordFormDialog } from "@/components/words/word-form-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -28,6 +29,7 @@ export function CategoriesPage() {
   const [deleting, setDeleting] = useState<CategoryWithCount | null>(null)
   const [deletePending, setDeletePending] = useState(false)
   const [startingId, setStartingId] = useState<string | null>(null)
+  const [wordCategory, setWordCategory] = useState<CategoryWithCount | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -110,10 +112,20 @@ export function CategoriesPage() {
             {categories.map((category) => (
               <Card key={category.id}>
                 <CardHeader>
-                  <CardTitle>{category.name}</CardTitle>
+                  <CardTitle>
+                    <Link to={`/categories/${category.id}`} className="rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-4">
+                      {category.name}
+                    </Link>
+                  </CardTitle>
                   <CardDescription>{pluralize(category.wordCount, "word")}</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="outline" aria-label={`New word in ${category.name}`} onClick={() => setWordCategory(category)}>
+                    New word
+                  </Button>
+                  <Button size="sm" variant="outline" render={<Link to={`/categories/${category.id}`} />} nativeButton={false} aria-label={`View words in ${category.name}`}>
+                    View words
+                  </Button>
                   <Button
                     type="button"
                     size="sm"
@@ -148,6 +160,17 @@ export function CategoriesPage() {
           open={formOpen}
           category={editing}
           onOpenChange={setFormOpen}
+          onSaved={() => setReloadKey((value) => value + 1)}
+        />
+      ) : null}
+      {wordCategory ? (
+        <WordFormDialog
+          key={wordCategory.id}
+          open
+          word={null}
+          categories={[wordCategory]}
+          defaultCategoryId={wordCategory.id}
+          onOpenChange={(open) => { if (!open) setWordCategory(null) }}
           onSaved={() => setReloadKey((value) => value + 1)}
         />
       ) : null}

@@ -37,6 +37,7 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="words" element={<WordsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
+          <Route path="categories/:categoryId" element={<WordsPage />} />
           <Route path="practice" element={<PracticePage />} />
           <Route path="practice/result" element={<ResultPage />} />
           <Route path="history" element={<HistoryPage />} />

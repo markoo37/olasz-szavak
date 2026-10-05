@@ -32,18 +32,20 @@ export function WordFormDialog({
   open,
   word,
   categories,
+  defaultCategoryId,
   onOpenChange,
   onSaved,
 }: {
   open: boolean
   word: WordWithCategory | null
   categories: Category[]
+  defaultCategoryId?: string
   onOpenChange: (open: boolean) => void
   onSaved: () => void
 }) {
   const [hungarian, setHungarian] = useState(word?.hungarian ?? "")
   const [italian, setItalian] = useState(word?.italian ?? "")
-  const [categoryId, setCategoryId] = useState(word?.category_id ?? categories[0]?.id ?? "")
+  const [categoryId, setCategoryId] = useState(word?.category_id ?? defaultCategoryId ?? categories[0]?.id ?? "")
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({})
   const [pending, setPending] = useState(false)
   const editing = Boolean(word)
